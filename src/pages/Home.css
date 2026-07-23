@@ -1,0 +1,949 @@
+.home {
+  min-height: 100vh;
+  background: transparent;
+  color: #26313A;
+  padding: 32px 22px 160px;
+
+  font-family:
+    "Inter",
+    "SF Pro Display",
+    sans-serif;
+}
+
+
+
+/* =================
+   Hero
+================= */
+
+.hero {
+  text-align: center;
+  padding-top: 48px;
+  margin-bottom: 32px;
+}
+
+
+/* --- Avatars --- */
+
+.avatars {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 36px;
+  margin-bottom: 14px;
+}
+
+
+.avatar-wrap {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(185, 221, 245, .7);
+  padding: 3px;
+  background: rgba(255, 255, 255, .7);
+  box-shadow:
+    0 6px 20px rgba(160, 200, 225, 0.12),
+    0 2px 4px  rgba(160, 200, 225, 0.06);
+  opacity: 0;
+}
+
+
+.avatar-wrap.left {
+  animation: avatarLeftIn 2.8s 0.15s ease-out forwards;
+}
+
+.avatar-wrap.right {
+  animation: avatarRightIn 2.8s 0.15s ease-out forwards;
+}
+
+@keyframes avatarLeftIn {
+  0%   { opacity: 0; transform: translateX(0); }
+  30%  { opacity: 1; transform: translateX(0); }
+  100% { opacity: 1; transform: translateX(10px); }
+}
+
+@keyframes avatarRightIn {
+  0%   { opacity: 0; transform: translateX(0); }
+  30%  { opacity: 1; transform: translateX(0); }
+  100% { opacity: 1; transform: translateX(-10px); }
+}
+
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+
+/* --- Relation tag --- */
+
+.relation-tag {
+  line-height: 1.4;
+}
+
+.days-num {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 44px;
+  font-weight: 600;
+  color: #8FC5E8;
+  margin: 0;
+  letter-spacing: .3px;
+}
+
+.days-label {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 12px;
+  color: #90A8B8;
+  margin: 0 0 12px;
+  letter-spacing: 1.5px;
+  text-transform: lowercase;
+}
+
+.relation-quote {
+  font-family: "Cormorant Garamond", "Georgia", serif;
+  font-style: italic;
+  font-size: 16px;
+  font-weight: 400;
+  color: #95A2AC;
+  margin: 0;
+  letter-spacing: .3px;
+  line-height: 1.6;
+}
+
+
+
+
+
+/* =================
+   Today's Letter
+================= */
+
+.letter-section {
+  margin-bottom: 28px;
+}
+
+
+.letter-paper {
+  position: relative;
+  background: rgba(255, 255, 255, .55);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, .5);
+  padding: 18px 24px;
+  box-shadow:
+    0 1px 6px rgba(160, 195, 215, 0.06);
+  text-align: center;
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+}
+
+/* 呼吸暖光层 */
+.letter-paper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,.85), rgba(255,238,220,.55));
+  opacity: 0;
+  animation: warmBreath 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.letter-paper > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes warmBreath {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 1; }
+}
+
+
+.welcome-text {
+  font-family:
+    "Noto Serif SC",
+    "Source Han Serif SC",
+    "Songti SC",
+    "SimSun",
+    serif;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  line-height: 1.8;
+  color: #526573;
+  margin: 0;
+}
+
+
+
+
+
+/* =================
+   Recent Chat — 手工纸纹理
+================= */
+
+.recent-chat-section {
+  margin-bottom: 28px;
+}
+
+
+.rc-card {
+  position: relative;
+  background:
+    /* 褶皱纹理 — SVG feTurbulence 噪声 */
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.025' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E"),
+    /* 纸纤纹 — 纵向 */
+    repeating-linear-gradient(
+      90deg,
+      rgba(185, 202, 218, 0.06),
+      rgba(185, 202, 218, 0.06) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    /* 纸纤纹 — 横向 */
+    repeating-linear-gradient(
+      0deg,
+      rgba(190, 205, 220, 0.05),
+      rgba(190, 205, 220, 0.05) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    /* 霜白纸底 */
+    rgba(250, 252, 254, 0.82);
+  border-radius: 14px;
+  padding: 22px 20px 14px;
+  box-shadow:
+    0 1px 10px rgba(160, 195, 215, 0.07),
+    0 0 0 1px rgba(185, 221, 245, 0.18);
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+}
+
+
+/* --- Header --- */
+
+.rc-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.rc-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: #26313A;
+  margin: 0;
+  letter-spacing: .5px;
+}
+
+
+/* --- Divider --- */
+
+.rc-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(185, 221, 245, 0.4);
+}
+
+
+/* --- List --- */
+
+.rc-list {
+  padding: 6px 0 2px;
+}
+
+
+/* --- Row --- */
+
+.rc-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  padding: 7px 4px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.rc-row.pinned {
+  background: rgba(220, 238, 248, 0.25);
+  border-radius: 8px;
+  margin: 0 -4px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+
+.rc-body {
+  flex: 1;
+  min-width: 0;
+}
+
+
+/* --- 星星 + 主体 --- */
+
+.rc-topline {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px;
+  gap: 5px;
+}
+
+.rc-star {
+  font-size: 14px;
+  color: #8FC5E8;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.rc-subject {
+  font-family: "Cormorant Garamond", "Georgia", serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1E2A33;
+  letter-spacing: .3px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rc-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.rc-pin {
+  color: #8FC5E8;
+  display: flex;
+  align-items: center;
+}
+
+.rc-time {
+  font-family: "Times New Roman", "Georgia", serif;
+  font-size: 11px;
+  color: #90A8B8;
+  white-space: nowrap;
+}
+
+
+/* --- 预览行 --- */
+
+.rc-preview {
+  margin: 0;
+  font-size: 13px;
+  color: #8A9AA6;
+  line-height: 1.5;
+  padding-left: 19px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rc-speaker {
+  font-size: 12px;
+  color: #8A9AA6;
+}
+
+
+/* --- Separator --- */
+
+.rc-sep {
+  width: 100%;
+  height: 1px;
+  background: rgba(185, 221, 245, 0.3);
+}
+
+
+/* --- Footer --- */
+
+.rc-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.rc-viewall {
+  font-family: "Times New Roman", serif;
+  font-size: 11px;
+  color: #90A8B8;
+  letter-spacing: .8px;
+  cursor: pointer;
+}
+
+.rc-arrow {
+  font-family: "Times New Roman", serif;
+  font-size: 13px;
+  color: #B0C8D8;
+}
+
+
+/* --- Feather --- */
+
+.feather-accent {
+  position: absolute;
+  bottom: 4px;
+  right: 10px;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+
+
+
+
+/* =================
+   Lower Desk
+================= */
+
+.lower-desk {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 20px;
+  align-items: start;
+}
+
+
+.side-minis {
+  grid-column: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+
+.desk-item {
+  background: rgba(255, 255, 255, .52);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow:
+    0 1px 8px rgba(160, 195, 215, 0.06);
+  backdrop-filter: blur(14px);
+}
+
+.di-label {
+  margin: 0 0 6px;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  color: #90A8B8;
+  text-transform: uppercase;
+}
+
+
+/* --- Music Player — 唱片盒展示卡 --- */
+
+.music-player {
+  grid-column: 1;
+  background: rgba(255, 255, 255, .48);
+  border-radius: 18px;
+  padding: 18px 20px 16px;
+  box-shadow:
+    0 2px 12px rgba(160, 195, 215, 0.07),
+    0 0 0 1px rgba(185, 221, 245, 0.15);
+  text-align: center;
+  cursor: pointer;
+  transition: box-shadow .4s ease;
+}
+
+.music-player:hover {
+  box-shadow:
+    0 4px 20px rgba(160, 195, 215, 0.14),
+    0 0 0 1px rgba(185, 221, 245, 0.25);
+}
+
+.music-player .di-label {
+  text-align: left;
+  margin-bottom: 4px;
+}
+
+
+/* ── 封面 + 黑胶叠层 ── */
+
+.mp-sleeve {
+  position: relative;
+  width: 130px;
+  height: 110px;
+  margin: 8px auto 10px;
+}
+
+
+/* 黑胶 — 右边露出一半 */
+.mp-vinyl {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 6px 24px rgba(30, 50, 70, 0.2),
+    0 2px 6px rgba(30, 50, 70, 0.1);
+  z-index: 0;
+  transition: box-shadow .6s ease;
+}
+
+
+/* ── 播放时旋转 ── */
+
+.music-player.playing .mp-vinyl {
+  animation: vinylSpin 3s linear infinite;
+  box-shadow:
+    0 8px 32px rgba(30, 50, 70, 0.28),
+    0 2px 8px rgba(30, 50, 70, 0.12);
+}
+
+@keyframes vinylSpin {
+  from { transform: translateY(-50%) rotate(0deg); }
+  to   { transform: translateY(-50%) rotate(360deg); }
+}
+
+
+/* ── 播放时黑胶微微悬浮 ── */
+
+.mp-sleeve {
+  position: relative;
+  width: 130px;
+  height: 110px;
+  margin: 8px auto 10px;
+}
+
+.music-player.playing .mp-sleeve {
+  animation: sleeveFloat 4s ease-in-out infinite;
+}
+
+@keyframes sleeveFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+
+/* 黑胶同心圆沟纹 */
+.mp-grooves {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(
+      circle at center,
+      #0f1a26 0px,
+      #0f1a26 1.5px,
+      #131f2c 1.5px,
+      #131f2c 2.5px,
+      #162433 2.5px,
+      #162433 3.5px,
+      #0f1a26 3.5px,
+      #0f1a26 4.5px
+    );
+}
+
+
+/* 圆心唱片标签 */
+.mp-label {
+  position: relative;
+  z-index: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #F2F6FA 0%,
+    #E8EDF3 60%,
+    #dce3ea 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 0 1.5px rgba(15, 26, 38, 0.5),
+    0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.mp-label-text {
+  font-family: "Times New Roman", serif;
+  font-size: 6.5px;
+  color: #5A7080;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+
+
+/* 封面 — 叠在黑胶上方靠左 */
+.mp-cover {
+  width: 78px;
+  height: 78px;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-radius: 6px;
+  background:
+    linear-gradient(
+      135deg,
+      #D8E8F4 0%,
+      #E8F1F8 30%,
+      #C8DCEA 60%,
+      #B8D0E2 100%
+    );
+  box-shadow:
+    0 2px 8px rgba(130, 170, 195, 0.18);
+  z-index: 1;
+}
+
+
+/* ── 曲目信息 ── */
+
+.mp-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.mp-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #26313A;
+  margin: 0;
+  letter-spacing: .3px;
+}
+
+.mp-heart {
+  font-size: 14px;
+  color: #B0C8D8;
+  cursor: pointer;
+}
+
+.mp-artist {
+  font-size: 12px;
+  color: #90A8B8;
+  margin: 0 0 10px;
+  letter-spacing: .3px;
+}
+
+
+/* ── 进度条 ── */
+
+.mp-bar {
+  width: 100%;
+  height: 2px;
+  background: rgba(185, 221, 245, 0.5);
+  border-radius: 1px;
+  margin-bottom: 4px;
+  position: relative;
+  cursor: pointer;
+}
+
+.mp-progress {
+  display: block;
+  width: 0%;
+  height: 100%;
+  background: #6A8EA8;
+  border-radius: 1px;
+  position: relative;
+  transition: width .3s ease;
+}
+
+/* 拖拽时进度条加高 */
+.mp-bar.dragging {
+  height: 4px;
+  border-radius: 2px;
+}
+
+.mp-bar.dragging .mp-progress::after {
+  width: 14px;
+  height: 14px;
+  right: -7px;
+}
+
+/* 滑动圆点 */
+.mp-progress::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #6A8EA8;
+  box-shadow: 0 1px 3px rgba(30, 50, 70, 0.15);
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+
+.mp-bar:hover .mp-progress::after,
+.music-player.playing .mp-progress::after {
+  opacity: 1;
+}
+
+
+/* ── 时间 ── */
+
+.mp-time-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.mp-current,
+.mp-duration {
+  font-family: "Times New Roman", serif;
+  font-size: 10px;
+  color: #98ACB8;
+  letter-spacing: .4px;
+}
+
+
+/* ── 控制 ── */
+
+.mp-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 22px;
+}
+
+.mp-ctrl {
+  font-size: 16px;
+  color: #A0B8C8;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.mp-ctrl.pause {
+  font-size: 13px;
+  color: #6A8EA8;
+  letter-spacing: 2px;
+}
+
+
+/* --- Weather Board — 雾蓝透明玻璃牌 --- */
+
+.weather-board {
+  background: rgba(235, 244, 252, 0.45);
+  border-radius: 12px;
+  box-shadow:
+    0 1px 6px rgba(160, 200, 220, 0.08),
+    0 0 0 1px rgba(185, 221, 245, 0.2);
+  transition:
+    box-shadow .5s ease,
+    background .5s ease;
+}
+
+.weather-board:hover {
+  background: rgba(240, 247, 253, 0.55);
+  box-shadow:
+    0 2px 10px rgba(160, 200, 220, 0.12),
+    0 0 0 1px rgba(185, 221, 245, 0.3);
+}
+
+.weather-board {
+  padding-top: 24px;
+}
+
+.weather-board .wb-temp {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 26px;
+  font-weight: 400;
+  color: #5A7A90;
+  margin: 0;
+  line-height: 1;
+}
+
+.weather-board .wb-cond {
+  font-size: 14px;
+  color: #7898AC;
+  margin: 6px 0 8px;
+}
+
+.weather-board .wb-location {
+  font-family: "Times New Roman", serif;
+  font-size: 11px;
+  color: #90A8B8;
+  text-align: right;
+  letter-spacing: .5px;
+}
+
+
+/* --- Mood Note — 手账纸撕页便签 --- */
+
+.mood-note {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(200, 185, 165, 0.03),
+      rgba(200, 185, 165, 0.03) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(195, 180, 160, 0.025),
+      rgba(195, 180, 160, 0.025) 1px,
+      transparent 1px,
+      transparent 2px
+    ),
+    linear-gradient(
+      175deg,
+      rgba(253, 249, 243, 0.82),
+      rgba(250, 244, 236, 0.75)
+    );
+  border-radius: 6px 10px 8px 4px;
+  box-shadow:
+    0 1px 6px rgba(180, 160, 140, 0.06);
+  position: relative;
+  clip-path: polygon(
+    0% 4%, 3% 0%, 7% 3%, 12% 0%, 18% 2%, 25% 0%, 30% 3%,
+    35% 0%, 42% 2%, 48% 0%, 53% 3%, 58% 0%, 64% 2%,
+    70% 0%, 75% 3%, 80% 0%, 85% 2%, 90% 0%, 95% 3%, 100% 1%,
+    100% 100%, 0% 100%
+  );
+  cursor: pointer;
+  transition:
+    transform .35s ease,
+    box-shadow .35s ease;
+  overflow: hidden;
+}
+
+.mood-note:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 3px 12px rgba(180, 160, 140, 0.1);
+}
+
+/* 撕纸胶带 */
+.mood-note::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  width: 20px;
+  height: 8px;
+  background: rgba(220, 205, 185, 0.28);
+  border-radius: 1px;
+  z-index: 2;
+}
+
+.mood-note .di-label,
+.mood-note .mn-word,
+.mood-note .mn-note {
+  position: relative;
+  z-index: 1;
+}
+
+.mood-note .mn-word {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 22px;
+  font-weight: 400;
+  font-style: italic;
+  color: #9A8070;
+  margin: 6px 0 2px;
+  letter-spacing: .3px;
+}
+
+.mood-note .mn-note {
+  font-size: 15px;
+  color: #B8A898;
+  margin: 2px 0 8px;
+  letter-spacing: 1px;
+}
+
+
+/* ── 心情历史 ── */
+
+.mn-history {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height .5s ease,
+    opacity .4s ease,
+    margin-top .4s ease;
+  margin-top: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.mood-note.open .mn-history {
+  max-height: 120px;
+  opacity: 1;
+  margin-top: 10px;
+}
+
+.mn-history-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(200, 185, 165, 0.15);
+}
+
+.mn-history-row:last-child {
+  border-bottom: none;
+}
+
+.mn-h-day {
+  font-family: "Times New Roman", serif;
+  font-size: 11px;
+  color: #C0B0A0;
+  letter-spacing: .3px;
+}
+
+.mn-h-feeling {
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: 13px;
+  color: #A09080;
+}
+
+
+
+
+
+/* =================
+   Mobile
+================= */
+
+@media(max-width: 420px) {
+
+  .home {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .avatar-wrap {
+    width: 76px;
+    height: 76px;
+  }
+
+  .avatars {
+    gap: 26px;
+  }
+
+  .lower-desk {
+    grid-template-columns: 1fr;
+  }
+
+  .days-num {
+    font-size: 36px;
+  }
+
+}

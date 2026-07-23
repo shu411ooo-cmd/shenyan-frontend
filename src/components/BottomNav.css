@@ -1,0 +1,154 @@
+/* ==========================================
+   📱 BottomNav — Cedar 风格底栏
+   5 项布局 · 中心爱心快捷入口
+   ========================================== */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 92%;
+  max-width: 420px;
+  height: 60px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 30px;
+  box-shadow:
+    0 4px 16px rgba(100, 130, 160, 0.08),
+    0 8px 32px rgba(100, 130, 160, 0.06);
+  z-index: 100;
+  padding: 0 6px;
+  box-sizing: border-box;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-decoration: none;
+  color: rgba(120, 145, 170, 0.55);
+  padding: 6px 10px;
+  border-radius: 16px;
+  transition: color 0.2s;
+  min-width: 56px;
+}
+
+.nav-item.active {
+  color: #5A8098;
+}
+
+.nav-item:hover {
+  color: #6B8DA5;
+}
+
+.nav-label {
+  font-size: 10px;
+  letter-spacing: 0.3px;
+  font-weight: 400;
+}
+
+/* ── 中心爱心按钮 ── */
+.nav-center {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1.5px solid rgba(180, 200, 218, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #B0C5D5;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  margin-top: -18px;
+  box-shadow:
+    0 2px 8px rgba(120, 150, 175, 0.1),
+    0 1px 3px rgba(120, 150, 175, 0.06);
+}
+
+.nav-center:hover {
+  color: #8AADC5;
+  border-color: rgba(160, 190, 210, 0.55);
+  transform: scale(1.05);
+}
+
+.nav-center.open {
+  color: #7AA0B5;
+  border-color: rgba(150, 185, 205, 0.5);
+  background: rgba(240, 245, 250, 0.85);
+}
+
+/* ── 快捷菜单浮层 ── */
+.quick-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  background: transparent;
+}
+
+.quick-menu {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  z-index: 101;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow:
+    0 6px 24px rgba(100, 130, 160, 0.1),
+    0 2px 8px rgba(100, 130, 160, 0.06);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  min-width: 180px;
+}
+
+.quick-menu.open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.quick-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #5A7386;
+  font-family: inherit;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.quick-menu-item:hover {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.quick-menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(140, 160, 180, 0.6);
+  flex-shrink: 0;
+}
