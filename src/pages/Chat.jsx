@@ -216,7 +216,10 @@ useEffect(() => {
     if (saved) {
       fetch(`${API}/sessions/${saved}/messages`)
         .then(r => r.json())
-        .then(() => setSessionId(saved))
+        .then(data => {
+  setSessionId(saved);
+  setMessages(data);  // ← 加上这一行
+})
         .catch(() => createSession());
     } else {
       createSession();
