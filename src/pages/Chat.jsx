@@ -45,10 +45,18 @@ export default function Chat() {
   const navigate = useNavigate();
   const { avatar1, avatar2 } = useSettings();
 
-  const [messages, setMessages] = useState([]);
-
+  const [messages, setMessages] = useState(() => {
+  console.log('🟢 初始化 messages');
+  return [];
+});
+useEffect(() => {
+  console.log('📦 messages 变化，当前长度:', messages.length, messages);
+}, [messages]);
   const [input, setInput] = useState("");
-  const [sessionId, setSessionId] = useState(null);
+  const [sessionId, setSessionId] = useState(() => {
+    const saved = localStorage.getItem('currentSessionId') || "481";
+    return saved ? Number(saved) : 1;
+  });
   const [showPlus, setShowPlus] = useState(false);
   const [pendingImage, setPendingImage] = useState(null);
   const [workingPhrase, setWorkingPhrase] = useState(null);
@@ -134,7 +142,7 @@ export default function Chat() {
     setPinnedIds(prev => {
       const next = prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id];
       localStorage.setItem("cedar-chat-pins", JSON.stringify(next));
-      // 存完整消息内容供 Bookmarks 读取
+      //存完整消息内容供 Bookmarks 读取
       if (msg && !prev.includes(id)) {
         const pinsData = JSON.parse(localStorage.getItem("cedar-chat-pins-data") || "[]");
         pinsData.push({ id, content: msg.content, image: msg.image, role: msg.role, ts: msg.ts });
@@ -151,23 +159,16 @@ export default function Chat() {
   // 存消息到 localStorage 供 Search 检索
   useEffect(() => {
     if (messages.length > 0) {
+      console.log('🟡 正在写入 localStorage，当前消息数:', messages.length);
       const searchable = messages.filter(m => m.content).map(m => ({ id: m.id, content: m.content, role: m.role, ts: m.ts }));
       localStorage.setItem("cedar-chat-msgs", JSON.stringify(searchable));
     }
   }, [messages]);
 
   const handleRegenerate = () => {
-    setContextMenu(null);
-    // 重新生成：移除最后一条 assistant 消息后重新发送
-    setMessages(prev => {
-      const lastUserIdx = [...prev].reverse().findIndex(m => m.role === "user");
-      if (lastUserIdx === -1) return prev;
-      const idx = prev.length - 1 - lastUserIdx;
-      const lastUserMsg = prev[idx];
-      setInput(lastUserMsg.content || "");
-      return prev.slice(0, idx);
-    });
-  };
+  // 暂时禁用，用于排查问题
+  console.log('重新生成功能已暂时禁用');
+};
 
   /* ── 点击外部关闭 ── */
   useEffect(() => {
@@ -189,14 +190,57 @@ export default function Chat() {
   }, [showMenu, showBgPicker, contextMenu, showPlus]);
 
 
-  /* ── 创建会话 ── */
+  /* ── 恢复或创建会话 ── */
   useEffect(() => {
-    fetch(`${API}/sessions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: "我们的对话" }),
-    }).then(r => r.json()).then(d => setSessionId(d.id));
+    const saved = localStorage.getItem('currentSessionId');
+
+    function createSession() {
+
+  if (localStorage.getItem('currentSessionId')) {
+    return;
+  }
+
+  fetch(`${API}/sessions`, {
+    method:"POST",
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({name:"我们的对话"})
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    setSessionId(d.id);
+    localStorage.setItem('currentSessionId', d.id);
+  });
+}
+    if (saved) {
+      fetch(`${API}/sessions/${saved}/messages`)
+        .then(r => r.json())
+        .then(() => setSessionId(saved))
+        .catch(() => createSession());
+    } else {
+      createSession();
+    }
   }, []);
+
+  /* ── 加载历史消息 ── */
+  useEffect(() => {
+    if (!sessionId) return;
+    console.log('当前 sessionId:', sessionId);
+    console.log('准备发送请求到:', `${API}/sessions/${sessionId}/messages`);
+    fetch(`${API}/sessions/${sessionId}/messages`)
+      .then(res => res.json())
+      .then(data => {
+  if (Array.isArray(data)) {
+    console.log('✅ 历史消息加载成功，条数:', data.length);
+    setMessages(data);
+  } else {
+    console.warn('⚠️ 返回数据不是数组:', data);
+    setMessages([]);
+  }
+})
+      .catch(err => console.error('加载历史消息失败:', err));
+  }, [sessionId]);
 
   /* ── 自动滚底 ── */
   useEffect(() => {
@@ -222,9 +266,9 @@ export default function Chat() {
         body: JSON.stringify({ message: text }),
       });
       const data = await res.json();
-      setMessages(m => [...m, { id: nextId.current++, role: "assistant", content: data.reply, ts: Date.now() }]);
+     setMessages(m => [...m, { id: nextId.current++, role: "assistant", content: data.reply, ts: Date.now() }]);
     } catch {
-      setMessages(m => [...m, { id: nextId.current++, role: "assistant", content: "消息没能送达。再试一次？", ts: Date.now() }]);
+     setMessages(m => [...m, { id: nextId.current++, role: "assistant", content: "消息没能送达。再试一次？", ts: Date.now() }]);
     }
     setLoading(false);
     setWorkingPhrase(null);
