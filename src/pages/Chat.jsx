@@ -11,10 +11,11 @@ function fmtTime(ts) {
   const d = new Date(ts);
   return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
 }
-
 function shouldShowTime(prev, curr) {
   if (!prev) return true;
-  return (curr.ts - prev.ts) > 5 * 60 * 1000;
+  const prevTime = new Date(prev.created_at).getTime();
+  const currTime = new Date(curr.created_at).getTime();
+  return (currTime - prevTime) > 5 * 60 * 1000;
 }
 
 
