@@ -236,12 +236,16 @@ useEffect(() => {
     console.log('准备发送请求到:', `${API}/sessions/${sessionId}/messages`);
     fetch(`${API}/sessions/${sessionId}/messages`)
       .then(res => res.json())
-      .then(data => {
+     .then(data => {
   if (Array.isArray(data)) {
-    console.log('✅ 历史消息加载成功，条数:', data.length);
-    setMessages(data);
+    console.log('历史消息加载成功，条数:', data.length);
+    const formatted = data.map(msg => ({
+      ...msg,
+      ts: new Date(msg.created_at).getTime()
+    }));
+    setMessages(formatted);
   } else {
-    console.warn('⚠️ 返回数据不是数组:', data);
+    console.warn('返回数据不是数组:', data);
     setMessages([]);
   }
 })
