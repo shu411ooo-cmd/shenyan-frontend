@@ -8,7 +8,9 @@ const API = "https://shenyan-backend-production.up.railway.app";
 
 /* ── 时间格式化 ── */
 function fmtTime(ts) {
+  if (!ts) return '';
   const d = new Date(ts);
+  if (isNaN(d.getTime())) return '';
   return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
 }
 function shouldShowTime(prev, curr) {
