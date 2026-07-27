@@ -11,7 +11,12 @@ function fmtTime(ts) {
   if (!ts) return '';
   const d = new Date(ts);
   if (isNaN(d.getTime())) return '';
-  return `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`;
+  return d.toLocaleString('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 }
 function shouldShowTime(prev, curr) {
   if (!prev) return true;
