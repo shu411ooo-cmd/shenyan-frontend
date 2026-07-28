@@ -86,7 +86,33 @@ useEffect(() => {
   /* ── 长按菜单 ── */
   const [contextMenu, setContextMenu] = useState(null); // { msgId, x, y }
 
-  /* ── Pin 书签 ── */
+  /* ── 工具条显示 ── */
+const TOOL_META = {
+  breath: { label: 'search_memory', argKey: 'query' },
+  hold:   { label: 'save_memory',   argKey: 'content' },
+};
+
+function fmtToolLabel(ts) {
+  const m = TOOL_META[ts.name] || { label: ts.name, argKey: null };
+  const val = m.argKey ? (ts.args?.[m.argKey] || '') : JSON.stringify(ts.args || {});
+  const clipped = typeof val === 'string' && val.length > 30 ? val.slice(0, 30) + '...' : val;
+  return `${m.label}("${clipped}")`;
+}
+
+function fmtToolArgs(ts) {
+  const m = TOOL_META[ts.name] || { label: ts.name, argKey: null };
+  const val = m.argKey ? (ts.args?.[m.argKey] || '') : JSON.stringify(ts.args || {});
+  return `${m.argKey || 'args'} = "${val}"`;
+}
+
+function fmtToolResult(result) {
+  if (result == null) return '(无返回)';
+  if (typeof result === 'string') return result.length > 300 ? result.slice(0, 300) + '...' : result;
+  try { const s = JSON.stringify(result); return s.length > 300 ? s.slice(0, 300) + '...' : s; }
+  catch { return String(result).slice(0, 300); }
+}
+
+/* ── Pin 书签 ── */
   const [tappedMsgId, setTappedMsgId] = useState(null);
 
   const handleBubbleTap = useCallback((msgId) => {
@@ -99,6 +125,15 @@ useEffect(() => {
     try { return JSON.parse(localStorage.getItem("cedar-chat-pins") || "[]"); }
     catch { return []; }
   });
+
+  const [expandedTools, setExpandedTools] = useState(new Set());
+  const toggleToolExpand = useCallback((msgId) => {
+    setExpandedTools(prev => {
+      const next = new Set(prev);
+      next.has(msgId) ? next.delete(msgId) : next.add(msgId);
+      return next;
+    });
+  }, []);
 
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
@@ -278,12 +313,80 @@ useEffect(() => {
       const res = await fetch(`${API}/sessions/${sessionId}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
+        body: JSON.stringify({ message: text, stream: true }),
       });
-      const data = await res.json();
-     setMessages(m => [...m, { id: nextId.current++, role: "assistant", content: data.reply, ts: Date.now() }]);
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const ct = res.headers.get('content-type') || '';
+      if (ct.includes('text/event-stream')) {
+        // ── SSE 流式 ──
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '', currentEvent = '';
+
+        const aiMsgId = nextId.current++;
+        let content = '';
+        let toolStatus = null;
+
+        setMessages(m => [...m, { id: aiMsgId, role: "assistant", content: "", ts: Date.now(), toolStatus: null }]);
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+
+            if (trimmed.startsWith('event: ')) {
+              currentEvent = trimmed.slice(7);
+            } else if (trimmed.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(trimmed.slice(6));
+
+                switch (currentEvent) {
+                  case 'tool_call':
+                    toolStatus = { name: data.name, status: 'loading', args: data.arguments, result: null };
+                    setMessages(m => m.map(msg => msg.id === aiMsgId ? { ...msg, toolStatus: { ...toolStatus } } : msg));
+                    break;
+                  case 'tool_result':
+                    toolStatus = { ...toolStatus, status: 'done', result: data.result };
+                    setMessages(m => m.map(msg => msg.id === aiMsgId ? { ...msg, toolStatus: { ...toolStatus } } : msg));
+                    break;
+                  case 'text':
+                    content += data.text;
+                    setMessages(m => m.map(msg => msg.id === aiMsgId ? { ...msg, content } : msg));
+                    break;
+                  case 'done':
+                    setMessages(m => m.map(msg => msg.id === aiMsgId ? { ...msg, content: data.reply || content } : msg));
+                    break;
+                  case 'error':
+                    setMessages(m => m.map(msg => msg.id === aiMsgId ? { ...msg, content: data.message || '出了点问题' } : msg));
+                    break;
+                }
+                currentEvent = '';
+              } catch (e) { /* skip parse errors */ }
+            }
+          }
+        }
+      } else {
+        // ── JSON 兼容（后端未启用 streaming 时） ──
+        const data = await res.json();
+        const toolCalls = data.tool_calls?.map(tc => ({
+          name: tc.name, status: 'done', args: tc.arguments, result: tc.result
+        }));
+        setMessages(m => [...m, {
+          id: nextId.current++, role: "assistant", content: data.reply, ts: Date.now(),
+          toolStatus: toolCalls?.[0] || null
+        }]);
+      }
     } catch {
-     setMessages(m => [...m, { id: nextId.current++, role: "assistant", content: "消息没能送达。再试一次？", ts: Date.now() }]);
+      setMessages(m => [...m, { id: nextId.current++, role: "assistant", content: "消息没能送达。再试一次？", ts: Date.now() }]);
     }
     setLoading(false);
     setWorkingPhrase(null);
@@ -358,8 +461,40 @@ const renderMessages = () => {
           onMouseLeave={clearPress}
           onContextMenu={handleMsgContextMenu(msg.id)}
         >
+          {/* ── 工具条（AI 气泡上方） ── */}
+          {!isUser && msg.toolStatus && (
+            <div className="bubble-tool-area">
+              <div
+                className={`bubble-tool-bar ${msg.toolStatus.status}`}
+                onClick={() => msg.toolStatus.status === 'done' && toggleToolExpand(msg.id)}
+              >
+                {msg.toolStatus.status === 'loading' ? (
+                  <>
+                    <span className="tool-spinner" />
+                    <span className="tool-label">{fmtToolLabel(msg.toolStatus)}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="tool-dot">{"•"}</span>
+                    <span className="tool-label">{fmtToolLabel(msg.toolStatus)}</span>
+                    <span className="tool-arrow">{expandedTools.has(msg.id) ? '▴' : '▾'}</span>
+                  </>
+                )}
+              </div>
+
+              {msg.toolStatus.status === 'done' && expandedTools.has(msg.id) && (
+                <div className="bubble-tool-detail">
+                  <div className="tool-detail-line">传入参数: {fmtToolArgs(msg.toolStatus)}</div>
+                  <div className="tool-detail-line">返回结果: {fmtToolResult(msg.toolStatus.result)}</div>
+                </div>
+              )}
+
+              <div className="bubble-tool-sep" />
+            </div>
+          )}
+
           <div
-            className={`msg-bubble ${isUser ? "user-bubble" : "shen-bubble"} ${msg.image ? "has-image" : ""}`}
+            className={`msg-bubble ${isUser ? "user-bubble" : "shen-bubble"} ${msg.image ? "has-image" : ""} ${!isUser && msg.toolStatus ? "has-tool-above" : ""}`}
             onClick={(e) => { e.stopPropagation(); handleBubbleTap(msg.id); }}
           >
             {isPinned && <span className="msg-pin-mark"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" opacity="0.5"><path d="M16 12V4h1V2H7v2h1v8l-2 7h12l-2-7z"/></svg></span>}

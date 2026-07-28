@@ -300,6 +300,100 @@
 }
 
 
+/* ── 工具条（贴在气泡上方） ── */
+
+.bubble-tool-area {
+  background: linear-gradient(135deg, #ACC8DE, #8BADC8);
+  border-radius: 18px 18px 0 0;
+  color: #fff;
+  font-size: 12px;
+  max-width: 100%;
+}
+
+.bubble-tool-bar {
+  display: flex;
+  align-items: center;
+  padding: 7px 12px;
+  cursor: default;
+  user-select: none;
+  gap: 5px;
+}
+
+.bubble-tool-bar.done {
+  cursor: pointer;
+}
+
+.bubble-tool-bar.done:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.tool-dot {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 10px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.tool-label {
+  flex: 1;
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.88);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tool-arrow {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.45);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.tool-spinner {
+  width: 8px; height: 8px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-top-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: toolSpin .7s linear infinite;
+}
+
+@keyframes toolSpin {
+  to { transform: rotate(360deg); }
+}
+
+.bubble-tool-detail {
+  padding: 0 12px 6px;
+}
+
+.bubble-tool-detail .tool-detail-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin-bottom: 6px;
+}
+
+.tool-detail-line {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.62);
+  line-height: 1.6;
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  word-break: break-all;
+}
+
+.bubble-tool-sep {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0 12px;
+}
+
+/* 气泡上方有工具条时 — 顶部变直角 */
+.shen-bubble.has-tool-above {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
 /* ── 打字动画 ── */
 .msg-bubble.typing {
   display: flex; align-items: center; gap: 4px;
