@@ -309,89 +309,86 @@ useEffect(() => {
 
 
   /* ── 渲染消息 ── */
-  const renderMessages = () => {
-    const nodes = [];
-    for (let i = 0; i < messages.length; i++) {
-      const msg = messages[i];
-      const prev = messages[i - 1] || null;
-      const next = messages[i + 1] || null;
-      const isFirstInGroup = !prev || prev.role !== msg.role;
-      const isLastInGroup = !next || next.role !== msg.role;
-      const isPinned = pinnedIds.includes(msg.id);
-      const showTime = shouldShowTime(prev, msg);
-    const getMessageContent = (msg) => {
-      if (msg.content) return msg.content;
-      if (msg.tool_calls && msg.tool_calls.length > 0) {
-      const toolNames = msg.tool_calls.map(t => t.function.name).join('、');
-      return `🔧 正在调用工具：${toolNames}`;
-       }
-       return '';
-      };
+  const getMessageContent = (msg) => {
+  if (msg.content) return msg.content;
+  if (msg.tool_calls && msg.tool_calls.length > 0) {
+    const toolNames = msg.tool_calls.map(t => t.function?.name || t.name).join('、');
+    return `🔧 正在调用工具：${toolNames}`;
+  }
+  return '';
+};
 
-      if ((!prev && i === 0) || (showTime && prev)) {
-        nodes.push(
-          <div key={`t-${i}`} className="chat-time-divider"><span>{fmtTime(msg.ts)}</span></div>
-        );
-      }
+const renderMessages = () => {
+  const nodes = [];
+  for (let i = 0; i < messages.length; i++) {
+    const msg = messages[i];
+    const prev = messages[i - 1] || null;
+    const next = messages[i + 1] || null;
+    const isFirstInGroup = !prev || prev.role !== msg.role;
+    const isLastInGroup = !next || next.role !== msg.role;
+    const isPinned = pinnedIds.includes(msg.id);
+    const showTime = shouldShowTime(prev, msg);
 
-      const isUser = msg.role === "user";
-      const avatarSrc = isUser ? (avatar1 || "/avatar-user.png") : (avatar2 || "/avatar-shen.png");
-
+    if ((!prev && i === 0) || (showTime && prev)) {
       nodes.push(
-        <div key={msg.id}
-          className={`msg-group ${isUser ? "user" : "shen"} ${isFirstInGroup ? "first" : ""} ${isLastInGroup ? "last" : ""}`}
+        <div key={`t-${i}`} className="chat-time-divider">
+          <span>{fmtTime(msg.ts)}</span>
+        </div>
+      );
+    }
+
+    const isUser = msg.role === "user";
+    const avatarSrc = isUser ? (avatar1 || "/avatar-user.png") : (avatar2 || "/avatar-shen.png");
+
+    nodes.push(
+      <div key={msg.id}
+        className={`msg-group ${isUser ? "user" : "shen"} ${isFirstInGroup ? "first" : ""} ${isLastInGroup ? "last" : ""}`}
+      >
+        <div className="msg-avatar-col">
+          {isFirstInGroup ? (
+            <div className="msg-avatar"><img src={avatarSrc} alt="" /></div>
+          ) : <div className="msg-avatar-spacer" />}
+        </div>
+        <div className="msg-bubble-col"
+          onTouchStart={handleMsgPressStart(msg.id)}
+          onTouchEnd={clearPress}
+          onTouchMove={clearPress}
+          onMouseDown={handleMsgPressStart(msg.id)}
+          onMouseUp={clearPress}
+          onMouseLeave={clearPress}
+          onContextMenu={handleMsgContextMenu(msg.id)}
         >
-          <div className="msg-avatar-col">
-            {isFirstInGroup ? (
-              <div className="msg-avatar"><img src={avatarSrc} alt="" /></div>
-            ) : <div className="msg-avatar-spacer" />}
-          </div>
-          <div className="msg-bubble-col"
-            onTouchStart={handleMsgPressStart(msg.id)}
-            onTouchEnd={clearPress}
-            onTouchMove={clearPress}
-            onMouseDown={handleMsgPressStart(msg.id)}
-            onMouseUp={clearPress}
-            onMouseLeave={clearPress}
-            onContextMenu={handleMsgContextMenu(msg.id)}
+          <div
+            className={`msg-bubble ${isUser ? "user-bubble" : "shen-bubble"} ${msg.image ? "has-image" : ""}`}
+            onClick={(e) => { e.stopPropagation(); handleBubbleTap(msg.id); }}
           >
-            <div
-              className={`msg-bubble ${isUser ? "user-bubble" : "shen-bubble"} ${msg.image ? "has-image" : ""}`}
-              onClick={(e) => { e.stopPropagation(); handleBubbleTap(msg.id); }}
-            >
-              {isPinned && <span className="msg-pin-mark"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" opacity="0.5"><path d="M16 12V4h1V2H7v2h1v8l-2 7h12l-2-7z"/></svg></span>}
-              {msg.image && <img src={msg.image} alt="" className="msg-image" />}
-              {(() => {
-              const content = getMessageContent(msg);
-              if (content) return <p>{content}</p>;
-              return null;
-              })()}
-            </div>
-            {tappedMsgId === msg.id && (
-              <span className="msg-tap-time">{fmtTime(msg.ts)}</span>
-            )}
+            {isPinned && <span className="msg-pin-mark"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" opacity="0.5"><path d="M16 12V4h1V2H7v2h1v8l-2 7h12l-2-7z"/></svg></span>}
+            {msg.image && <img src={msg.image} alt="" className="msg-image" />}
+            {getMessageContent(msg) && <p>{getMessageContent(msg)}</p>}
+          </div>
+          {tappedMsgId === msg.id && (
+            <span className="msg-tap-time">{fmtTime(msg.ts)}</span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    nodes.push(
+      <div key="loading" className="msg-group shen first last">
+        <div className="msg-avatar-col"><div className="msg-avatar"><img src={avatar2 || "/avatar-shen.png"} alt="" /></div></div>
+        <div className="msg-bubble-col">
+          <div className="msg-bubble shen-bubble loading-bubble">
+            <span className="dot-1">.</span><span className="dot-2">.</span><span className="dot-3">.</span>
           </div>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
-    if (loading) {
-      nodes.push(
-        <div key="loading" className="msg-group shen first">
-          <div className="msg-avatar-col">
-            <div className="msg-avatar"><img src={avatar2 || "/avatar-shen.png"} alt="" /></div>
-          </div>
-          <div className="msg-bubble-col">
-            <div className="msg-bubble shen-bubble typing">
-              <span className="typing-dot" /><span className="typing-dot" /><span className="typing-dot" />
-            </div>
-          </div>
-        </div>
-      );
-    }
-    return nodes;
-  };
-
+  return nodes;
+};
 
   /* ── 背景 class ── */
   const bgClass = chatBg === "pearl" ? "bg-pearl" : chatBg.startsWith("custom:") ? "bg-custom" : "bg-fog";
