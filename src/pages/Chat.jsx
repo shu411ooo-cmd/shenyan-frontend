@@ -510,16 +510,24 @@ const renderMessages = () => {
   }
 
   if (loading) {
-    nodes.push(
-      <div key="loading" className="msg-group shen first last">
-        <div className="msg-avatar-col"><div className="msg-avatar"><img src={avatar2 || "/avatar-shen.png"} alt="" /></div></div>
-        <div className="msg-bubble-col">
-          <div className="msg-bubble shen-bubble loading-bubble">
-            <span className="dot-1">.</span><span className="dot-2">.</span><span className="dot-3">.</span>
+    // 流式发送中（最后一条消息是 AI）时不显示加载点
+    const lastMsg = messages[messages.length - 1];
+    const isStreaming = lastMsg?.role === "assistant";
+
+    if (!isStreaming) {
+      nodes.push(
+        <div key="loading" className="msg-group shen first last">
+          <div className="msg-avatar-col"><div className="msg-avatar"><img src={avatar2 || "/avatar-shen.png"} alt="" /></div></div>
+          <div className="msg-bubble-col">
+            <div className="msg-bubble shen-bubble typing">
+              <span className="typing-dot">.</span>
+              <span className="typing-dot">.</span>
+              <span className="typing-dot">.</span>
+            </div>
           </div>
         </div>
-      </div>
-    );
+      );
+    }
   }
 
   return nodes;
