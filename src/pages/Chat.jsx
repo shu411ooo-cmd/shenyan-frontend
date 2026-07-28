@@ -319,6 +319,14 @@ useEffect(() => {
       const isLastInGroup = !next || next.role !== msg.role;
       const isPinned = pinnedIds.includes(msg.id);
       const showTime = shouldShowTime(prev, msg);
+    const getMessageContent = (msg) => {
+      if (msg.content) return msg.content;
+      if (msg.tool_calls && msg.tool_calls.length > 0) {
+      const toolNames = msg.tool_calls.map(t => t.function.name).join('、');
+      return `🔧 正在调用工具：${toolNames}`;
+       }
+       return '';
+      };
 
       if ((!prev && i === 0) || (showTime && prev)) {
         nodes.push(
@@ -353,7 +361,11 @@ useEffect(() => {
             >
               {isPinned && <span className="msg-pin-mark"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" opacity="0.5"><path d="M16 12V4h1V2H7v2h1v8l-2 7h12l-2-7z"/></svg></span>}
               {msg.image && <img src={msg.image} alt="" className="msg-image" />}
-              {msg.content && <p>{msg.content}</p>}
+              {(() => {
+              const content = getMessageContent(msg);
+              if (content) return <p>{content}</p>;
+              return null;
+              })()}
             </div>
             {tappedMsgId === msg.id && (
               <span className="msg-tap-time">{fmtTime(msg.ts)}</span>
