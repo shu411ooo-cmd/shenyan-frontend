@@ -6,6 +6,12 @@ import "./Chat.css";
 const API = "https://shenyan-backend-production.up.railway.app";
 
 
+/* ── 从累积文本中提取首个完整句子（按。！？…~ 断句） ── */
+function extractNextSentence(buf) {
+  const m = buf.match(/^[^。！？!?.…~\n]+(?:[。！？!?.…~]|\n\n)+/);
+  return m ? m[0] : null;
+}
+
 /* ── 时间格式化 ── */
 function fmtTime(ts) {
   if (!ts) return '';
@@ -320,16 +326,14 @@ function fmtToolResult(result) {
 
       const ct = res.headers.get('content-type') || '';
       if (ct.includes('text/event-stream')) {
-        // ── SSE 流式 ──
+        // ── SSE 流式 + 句子拆分 ──
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '', currentEvent = '';
 
-        const aiMsgId = nextId.current++;
-        let content = '';
+        let sentenceBuf = '';       // 累积未断句的文本
         let toolStatus = null;
-
-        setMessages(m => [...m, { id: aiMsgId, role: "assistant", content: "", ts: Date.now(), toolStatus: null }]);
+        let sseDone = false;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -352,27 +356,73 @@ function fmtToolResult(result) {
                 switch (currentEvent) {
                   case 'tool_call':
                     toolStatus = { name: data.name, status: 'loading', args: data.arguments, result: null };
-                    setMessages(m => m.map(msg => msg.id === aiMsgId ? { ...msg, toolStatus: { ...toolStatus } } : msg));
+                    setMessages(m => [...m, { id: nextId.current++, role: "assistant", content: "", ts: Date.now(), toolStatus: { ...toolStatus } }]);
                     break;
                   case 'tool_result':
                     toolStatus = { ...toolStatus, status: 'done', result: data.result };
-                    setMessages(m => m.map(msg => msg.id === aiMsgId ? { ...msg, toolStatus: { ...toolStatus } } : msg));
+                    setMessages(m => {
+                      const last = m[m.length - 1];
+                      if (last && last.toolStatus?.status === 'loading') {
+                        return m.map((msg, i) => i === m.length - 1 ? { ...msg, toolStatus: { ...toolStatus } } : msg);
+                      }
+                      return [...m, { id: nextId.current++, role: "assistant", content: "", ts: Date.now(), toolStatus: { ...toolStatus } }];
+                    });
                     break;
-                  case 'text':
-                    content += data.text;
-                    setMessages(m => m.map(msg => msg.id === aiMsgId ? { ...msg, content } : msg));
+                  case 'text': {
+                    sentenceBuf += data.text;
+
+                    // 抽出所有完整句子 → 每条独立消息
+                    const complete = [];
+                    let rem = sentenceBuf;
+                    let ext;
+                    while ((ext = extractNextSentence(rem)) !== null) {
+                      complete.push(ext);
+                      rem = rem.slice(ext.length);
+                    }
+                    sentenceBuf = rem;
+
+                    if (complete.length > 0 || sentenceBuf.trim()) {
+                      setMessages(m => {
+                        let next = [...m];
+                        for (const sent of complete) {
+                          next = [...next, { id: nextId.current++, role: "assistant", content: sent.trim(), ts: Date.now(), toolStatus: null }];
+                        }
+                        // 残句：显示/更新最后一条 pending 消息
+                        if (sentenceBuf.trim()) {
+                          const last = next[next.length - 1];
+                          if (last && last._pending) {
+                            next = next.map((msg, i) => i === next.length - 1 ? { ...msg, content: sentenceBuf.trim() } : msg);
+                          } else {
+                            next = [...next, { id: nextId.current++, role: "assistant", content: sentenceBuf.trim(), ts: Date.now(), toolStatus: null, _pending: true }];
+                          }
+                        }
+                        return next;
+                      });
+                    }
                     break;
+                  }
                   case 'done':
-                    setMessages(m => m.map(msg => msg.id === aiMsgId ? { ...msg, content: data.reply || content } : msg));
+                    sseDone = true;
                     break;
                   case 'error':
-                    setMessages(m => m.map(msg => msg.id === aiMsgId ? { ...msg, content: data.message || '出了点问题' } : msg));
+                    setMessages(m => [...m, { id: nextId.current++, role: "assistant", content: data.message || '出了点问题', ts: Date.now(), toolStatus: null }]);
                     break;
                 }
                 currentEvent = '';
               } catch (e) { /* skip parse errors */ }
             }
           }
+        }
+
+        // 流结束 —— 残句转正
+        if (sentenceBuf.trim()) {
+          setMessages(m => {
+            const last = m[m.length - 1];
+            if (last && last._pending) {
+              return m.map((msg, i) => i === m.length - 1 ? { ...msg, _pending: undefined } : msg);
+            }
+            return [...m, { id: nextId.current++, role: "assistant", content: sentenceBuf.trim(), ts: Date.now(), toolStatus: null }];
+          });
         }
       } else {
         // ── JSON 兼容（后端未启用 streaming 时） ──
