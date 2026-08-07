@@ -328,7 +328,7 @@ function fmtToolResult(result) {
       const res = await fetch(`${API}/sessions/${sessionId}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, stream: true }),
+        body: JSON.stringify({ message: text, stream: true, image: image || undefined }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -463,12 +463,29 @@ function fmtToolResult(result) {
     setWorkingPhrase(null);
   };
 
-  /* ── 图片上传 ── */
+  /* ── 图片上传（压缩到长边 1280 再发） ── */
+  const compressImage = (dataUrl, maxSide = 1280, quality = 0.85) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(maxSide / img.width, maxSide / img.height, 1);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  };
+
   const handleFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => setPendingImage(reader.result);
+    reader.onload = async () => setPendingImage(await compressImage(reader.result));
     reader.readAsDataURL(file);
     e.target.value = "";
   };
