@@ -141,6 +141,15 @@ function fmtToolResult(result) {
     });
   }, []);
 
+  const [expandedThinking, setExpandedThinking] = useState(new Set());
+  const toggleThinking = useCallback((msgId) => {
+    setExpandedThinking(prev => {
+      const next = new Set(prev);
+      if (next.has(msgId)) next.delete(msgId); else next.add(msgId);
+      return next;
+    });
+  }, []);
+
   const bottomRef = useRef(null);
   const fileRef = useRef(null);
   const photoRef = useRef(null);
@@ -334,6 +343,7 @@ function fmtToolResult(result) {
         let sentenceBuf = '';       // 累积未断句的文本
         let toolStatus = null;
         let sseDone = false;
+        let thinkingBuf = '';       // 累积思考链内容
 
         while (true) {
           const { done, value } = await reader.read();
@@ -354,6 +364,17 @@ function fmtToolResult(result) {
                 const data = JSON.parse(trimmed.slice(6));
 
                 switch (currentEvent) {
+                  case 'thinking': {
+                    thinkingBuf += data.thought || '';
+                    setMessages(m => {
+                      const last = m[m.length - 1];
+                      if (last && last._thinking) {
+                        return m.map((msg, i) => i === m.length - 1 ? { ...msg, thinking: thinkingBuf } : msg);
+                      }
+                      return [...m, { id: nextId.current++, role: "assistant", content: "", ts: Date.now(), toolStatus: null, _thinking: true, thinking: thinkingBuf }];
+                    });
+                    break;
+                  }
                   case 'tool_call':
                     toolStatus = { name: data.name, status: 'loading', args: data.arguments, result: null };
                     setMessages(m => [...m, { id: nextId.current++, role: "assistant", content: "", ts: Date.now(), toolStatus: { ...toolStatus } }]);
@@ -543,14 +564,30 @@ const renderMessages = () => {
             </div>
           )}
 
-          <div
-            className={`msg-bubble ${isUser ? "user-bubble" : "shen-bubble"} ${msg.image ? "has-image" : ""} ${!isUser && msg.toolStatus ? "has-tool-above" : ""}`}
-            onClick={(e) => { e.stopPropagation(); handleBubbleTap(msg.id); }}
-          >
-            {isPinned && <span className="msg-pin-mark"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" opacity="0.5"><path d="M16 12V4h1V2H7v2h1v8l-2 7h12l-2-7z"/></svg></span>}
-            {msg.image && <img src={msg.image} alt="" className="msg-image" />}
-            {getMessageContent(msg) && <p>{getMessageContent(msg)}</p>}
-          </div>
+          {msg._thinking ? (
+            <div className="bubble-thinking-area">
+              <div
+                className={`bubble-thinking-bar ${expandedThinking.has(msg.id) ? "open" : ""}`}
+                onClick={() => toggleThinking(msg.id)}
+              >
+                <span className="thinking-spark">✦</span>
+                <span className="thinking-label">thinking</span>
+                <span className="thinking-arrow">{expandedThinking.has(msg.id) ? '▴' : '▾'}</span>
+              </div>
+              {expandedThinking.has(msg.id) && msg.thinking && (
+                <div className="bubble-thinking-detail">{msg.thinking}</div>
+              )}
+            </div>
+          ) : (
+            <div
+              className={`msg-bubble ${isUser ? "user-bubble" : "shen-bubble"} ${msg.image ? "has-image" : ""} ${!isUser && msg.toolStatus ? "has-tool-above" : ""}`}
+              onClick={(e) => { e.stopPropagation(); handleBubbleTap(msg.id); }}
+            >
+              {isPinned && <span className="msg-pin-mark"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" opacity="0.5"><path d="M16 12V4h1V2H7v2h1v8l-2 7h12l-2-7z"/></svg></span>}
+              {msg.image && <img src={msg.image} alt="" className="msg-image" />}
+              {getMessageContent(msg) && <p>{getMessageContent(msg)}</p>}
+            </div>
+          )}
           {tappedMsgId === msg.id && (
             <span className="msg-tap-time">{fmtTime(msg.ts)}</span>
           )}
